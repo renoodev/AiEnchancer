@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Enhancer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+            <h1 class="text-xl font-bold tracking-wide">Peningkat Gambar AI</h1>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow p-6 max-w-6xl mx-auto w-full">
+        
+        <!-- Error Message Box -->
+        <div id="errorBox" class="hidden mb-6 bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg relative flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="errorMessage" class="text-sm font-medium"></span>
+            <button onclick="hideError()" class="absolute top-3 right-3 text-red-400 hover:text-red-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="mt-8 bg-gray-800 border-2 border-dashed border-gray-600 rounded-2xl p-12 text-center transition-all hover:border-blue-500 hover:bg-gray-800/80 cursor-pointer">
+            <input type="file" id="fileInput" class="hidden" accept="image/*">
+            <div id="dropzone" class="flex flex-col items-center justify-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-400 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <h3 class="text-xl font-semibold mb-2">Unggah Gambar Anda</h3>
+                <p class="text-gray-400 text-sm">Klik di sini atau tarik & lepas file gambar</p>
+                <p class="text-gray-500 text-xs mt-2">Mendukung JPG, PNG, WEBP</p>
+            </div>
+        </div>
+
+        <!-- Workspace Section (Hidden initially) -->
+        <div id="workspaceSection" class="hidden mt-6">
+            <!-- Controls -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-700">
+                <button id="resetBtn" class="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Pilih Gambar Lain
+                </button>
+                
+                <button id="enhanceBtn" class="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors shadow-lg shadow-blue-500/30 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg>
+                    <span id="enhanceText">Tingkatkan Kualitas AI</span>
+                </button>
+            </div>
+
+            <!-- Image Comparison Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Original Image -->
+                <div class="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 flex flex-col shadow-lg">
+                    <div class="bg-gray-750 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                        <span class="font-medium text-sm text-gray-300">Gambar Asli</span>
+                    </div>
+                    <div class="p-4 flex-grow flex items-center justify-center bg-gray-900/50">
+                        <img id="originalPreview" class="max-w-full max-h-[60vh] object-contain rounded-lg" src="" alt="Asli">
+                    </div>
+                </div>
+
+                <!-- Enhanced Image -->
+                <div class="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 flex flex-col shadow-lg relative">
+                    <div class="bg-gray-750 px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                        <span class="font-medium text-sm text-blue-400">Hasil AI</span>
+                        <button id="downloadBtn" class="hidden px-3 py-1.5 text-xs font-semibold text-white bg-green-600 hover:bg-green-500 rounded-md transition-colors flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Unduh
+                        </button>
+                    </div>
+                    <div class="p-4 flex-grow flex items-center justify-center bg-gray-900/50 min-h-[300px]">
+                        <!-- Placeholder when not enhanced yet -->
+                        <div id="enhancedPlaceholder" class="text-center text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-3 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            <p class="text-sm">Klik "Tingkatkan Kualitas AI" untuk memproses</p>
+                        </div>
+                        
+                        <!-- The Result Image -->
+                        <img id="enhancedPreview" class="hidden max-w-full max-h-[60vh] object-contain rounded-lg" src="" alt="Hasil">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- KONFIGURASI API ---
+        // CATATAN PENTING: Jika Anda mengunggah file ini ke GitHub Pages milik Anda sendiri,
+        // lingkungan eksekusi tidak lagi dapat menyuntikkan API key secara otomatis.
+        // Anda HARUS memasukkan API Key Gemini Anda secara manual di bawah ini.
+        const apiKey = ""; 
+        
+        // --- VARIABEL GLOBAL ---
+        let currentFileBase64 = null;
+        let currentMimeType = null;
+        let isProcessing = false;
+
+        // --- ELEMEN DOM ---
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const workspaceSection = document.getElementById('workspaceSection');
+        const originalPreview = document.getElementById('originalPreview');
+        const enhancedPreview = document.getElementById('enhancedPreview');
+        const enhancedPlaceholder = document.getElementById('enhancedPlaceholder');
+        const enhanceBtn = document.getElementById('enhanceBtn');
+        const enhanceText = document.getElementById('enhanceText');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const errorBox = document.getElementById('errorBox');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // --- FUNGSI UTILITAS ---
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorBox.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function hideError() {
+            errorBox.classList.add('hidden');
+        }
+
+        // --- EVENT LISTENER UNTUK UPLOAD ---
+        uploadSection.addEventListener('click', () => fileInput.click());
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('border-blue-500', 'bg-gray-800/80');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('border-blue-500', 'bg-gray-800/80');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('border-blue-500', 'bg-gray-800/80');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // --- MEMBACA FILE ---
+        function handleFile(file) {
+            hideError();
+            if (!file.type.startsWith('image/')) {
+                showError("File yang dipilih bukan gambar yang valid.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                originalPreview.src = dataUrl;
+                
+                // Ekstrak base64 dan mimetype
+                const parts = dataUrl.split(';');
+                currentMimeType = parts[0].split(':')[1];
+                currentFileBase64 = parts[1].split(',')[1];
+
+                // Setup UI
+                uploadSection.classList.add('hidden');
+                workspaceSection.classList.remove('hidden');
+                
+                // Reset result view
+                enhancedPreview.classList.add('hidden');
+                enhancedPreview.src = '';
+                enhancedPlaceholder.classList.remove('hidden');
+                downloadBtn.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- RESET UI ---
+        resetBtn.addEventListener('click', () => {
+            if (isProcessing) return;
+            currentFileBase64 = null;
+            currentMimeType = null;
+            fileInput.value = '';
+            workspaceSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            hideError();
+        });
+
+        // --- LOGIKA AI ENHANCEMENT ---
+        enhanceBtn.addEventListener('click', async () => {
+            if (!currentFileBase64 || isProcessing) return;
+
+            // Update UI State ke Loading
+            isProcessing = true;
+            enhanceBtn.disabled = true;
+            enhanceBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            enhanceText.innerHTML = '<span class="loader"></span> Memproses...';
+            hideError();
+            enhancedPlaceholder.classList.remove('hidden');
+            enhancedPlaceholder.innerHTML = '<span class="loader" style="width:30px;height:30px;border-width:4px;"></span><p class="mt-4 text-sm text-blue-400">AI sedang bekerja meningkatkan gambar Anda...</p>';
+            enhancedPreview.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+
+            try {
+                // Payload instruksi untuk model Gemini
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: "Enhance this image. Make it highly detailed, sharp, vibrant, remove noise, and improve lighting. Output ONLY the enhanced image." },
+                            { inlineData: { mimeType: currentMimeType, data: currentFileBase64 } }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["IMAGE"]
+                    }
+                };
+
+                // Exponential Backoff (Mencoba ulang hingga 5 kali jika gagal)
+                let response;
+                let retries = 5;
+                let delay = 1000;
+                
+                while (retries > 0) {
+                    try {
+                        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        if (response.ok) break;
+                    } catch (e) {
+                        console.warn(`Attempt failed, retrying in ${delay}ms...`);
+                    }
+                    retries--;
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                    }
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error("Gagal terhubung ke layanan AI. Pastikan API Key valid atau coba lagi nanti.");
+                }
+
+                const result = await response.json();
+                
+                // Ekstrak hasil gambar dari response
+                const outBase64 = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+                const outMime = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.mimeType || 'image/jpeg';
+
+                if (outBase64) {
+                    const finalImageUrl = `data:${outMime};base64,${outBase64}`;
+                    enhancedPreview.src = finalImageUrl;
+                    enhancedPreview.classList.remove('hidden');
+                    enhancedPlaceholder.classList.add('hidden');
+                    downloadBtn.classList.remove('hidden');
+                } else {
+                    throw new Error("AI tidak mengembalikan gambar. Silakan coba gambar lain.");
+                }
+
+            } catch (error) {
+                showError(error.message);
+                enhancedPlaceholder.innerHTML = '<svg class="w-12 h-12 mx-auto mb-3 text-red-500 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p class="text-sm text-red-400">Proses gagal</p>';
+            } finally {
+                // Kembalikan UI Button
+                isProcessing = false;
+                enhanceBtn.disabled = false;
+                enhanceBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                enhanceText.innerHTML = 'Tingkatkan Kualitas AI';
+            }
+        });
+
+        // --- LOGIKA UNDUH ---
+        downloadBtn.addEventListener('click', () => {
+            if (!enhancedPreview.src) return;
+            const link = document.createElement('a');
+            link.href = enhancedPreview.src;
+            link.download = `enhanced-image-${Date.now()}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+    </script>
+</body>
+</html>
+
