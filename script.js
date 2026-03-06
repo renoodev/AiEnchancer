@@ -1,67 +1,33 @@
-const board = document.getElementById('board');
-const cells = document.querySelectorAll('.cell');
-const statusDisplay = document.querySelector('#status span');
-const resetBtn = document.getElementById('resetBtn');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Tic Tac Toe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-let currentPlayer = "X";
-let gameActive = true;
-let gameState = ["", "", "", "", "", "", "", "", ""];
+    <div class="info">
+        <h1>Infinite Tic Tac Toe</h1>
+        <p>Setiap pemain hanya boleh punya 3 simbol.<br>Simbol tertua akan hilang jika kamu menambah baru!</p>
+        <div class="status-box" id="status">Giliran: <b id="turnText">X</b></div>
+    </div>
 
-const winningConditions = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Baris
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Kolom
-    [0, 4, 8], [2, 4, 6]             // Diagonal
-];
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+    </div>
 
-function handleCellClick(e) {
-    const clickedCell = e.target;
-    const clickedIndex = parseInt(clickedCell.getAttribute('data-index'));
+    <button class="reset-btn" id="resetBtn">Reset Game</button>
 
-    if (gameState[clickedIndex] !== "" || !gameActive) return;
-
-    gameState[clickedIndex] = currentPlayer;
-    clickedCell.innerText = currentPlayer;
-    clickedCell.classList.add(currentPlayer.toLowerCase());
-
-    checkResult();
-}
-
-function checkResult() {
-    let roundWon = false;
-    for (let i = 0; i < winningConditions.length; i++) {
-        const [a, b, c] = winningConditions[i];
-        if (gameState[a] && gameState[a] === gameState[b] && gameState[a] === gameState[c]) {
-            roundWon = true;
-            break;
-        }
-    }
-
-    if (roundWon) {
-        statusDisplay.innerText = `${currentPlayer} Menang! 🎉`;
-        gameActive = false;
-        return;
-    }
-
-    if (!gameState.includes("")) {
-        statusDisplay.innerText = "Seri! 🤝";
-        gameActive = false;
-        return;
-    }
-
-    currentPlayer = currentPlayer === "X" ? "O" : "X";
-    statusDisplay.innerText = currentPlayer;
-}
-
-resetBtn.addEventListener('click', () => {
-    currentPlayer = "X";
-    gameActive = true;
-    gameState = ["", "", "", "", "", "", "", "", ""];
-    statusDisplay.innerText = "X";
-    cells.forEach(cell => {
-        cell.innerText = "";
-        cell.classList.remove('x', 'o');
-    });
-});
-
-cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-
+    <script src="script.js"></script>
+</body>
+</html>
