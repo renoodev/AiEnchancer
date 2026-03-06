@@ -1,37 +1,190 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Renoodev AI Image Editor</title>
-<link rel="stylesheet" href="style.css">
+<title>⚡ Renoodev AI Image Editor</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#0b0f19;
+color:white;
+text-align:center;
+padding:40px;
+}
+
+h1{
+font-size:32px;
+margin-bottom:10px;
+}
+
+.container{
+background:#121826;
+padding:30px;
+border-radius:15px;
+max-width:500px;
+margin:auto;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
+}
+
+input[type=file]{
+margin:20px;
+}
+
+button{
+padding:12px 20px;
+margin:5px;
+border:none;
+border-radius:8px;
+background:#22c55e;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#16a34a;
+}
+
+input[type=text]{
+padding:10px;
+width:80%;
+border-radius:8px;
+border:none;
+margin-top:10px;
+}
+
+img{
+margin-top:20px;
+max-width:100%;
+border-radius:10px;
+}
+
+.loading{
+margin-top:15px;
+color:#22c55e;
+display:none;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>⚡ Renoodev AI Image Editor</h1>
 <p>Edit gambar dengan AI</p>
 
+<div class="container">
+
 <input type="file" id="imageInput">
 
-<div class="buttons">
-<button onclick="removeBG()">Remove Background</button>
-<button onclick="enhance()">Enhance Image</button>
-<button onclick="expand()">Expand Image</button>
-</div>
+<br>
 
-<input type="text" id="prompt" placeholder="Tambah objek contoh: add a cat">
+<button onclick="removeBG()">Remove Background</button>
+<button onclick="enhance()">Enhance</button>
+<button onclick="expand()">Expand</button>
+
+<br><br>
+
+<input type="text" id="prompt" placeholder="Tambahkan objek...">
+
+<br>
 
 <button onclick="addObject()">Add Object</button>
 
-<div class="result">
-<img id="output">
-</div>
+<div class="loading" id="loading">⏳ AI sedang memproses...</div>
+
+<img id="preview">
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+const api = "https://renoodev.vercel.app/api/ai"
+
+function getImage(){
+
+const file = document.getElementById("imageInput").files[0]
+
+if(!file){
+alert("Upload gambar dulu")
+return null
+}
+
+return file
+
+}
+
+function previewImage(file){
+
+const reader = new FileReader()
+
+reader.onload = function(e){
+document.getElementById("preview").src = e.target.result
+}
+
+reader.readAsDataURL(file)
+
+}
+
+async function sendToAPI(type){
+
+const file = getImage()
+
+if(!file) return
+
+previewImage(file)
+
+document.getElementById("loading").style.display="block"
+
+const formData = new FormData()
+
+formData.append("image", file)
+formData.append("type", type)
+
+const res = await fetch(api,{
+method:"POST",
+body:formData
+})
+
+const data = await res.json()
+
+document.getElementById("loading").style.display="none"
+
+if(data.image){
+document.getElementById("preview").src=data.image
+}else{
+alert("AI gagal memproses")
+}
+
+}
+
+function removeBG(){
+sendToAPI("removebg")
+}
+
+function enhance(){
+sendToAPI("enhance")
+}
+
+function expand(){
+sendToAPI("expand")
+}
+
+function addObject(){
+
+const prompt=document.getElementById("prompt").value
+
+if(prompt==""){
+alert("Isi objek dulu")
+return
+}
+
+sendToAPI(prompt)
+
+}
+
+</script>
 
 </body>
 </html>
