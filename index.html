@@ -1,16 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Image Editor</title>
+<meta charset="UTF-8">
+<title>Renoodev AI Image Editor</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<h1>AI Image Editor</h1>
+<div class="container">
 
-<input type="file">
+<h1>⚡ Renoodev AI Image Editor</h1>
+<p>Edit gambar dengan AI</p>
 
-<button>Remove Background</button>
-<button>Enhance</button>
+<input type="file" id="imageInput">
+
+<div class="buttons">
+<button onclick="removeBG()">Remove Background</button>
+<button onclick="enhance()">Enhance Image</button>
+<button onclick="expand()">Expand Image</button>
+</div>
+
+<input type="text" id="prompt" placeholder="Tambah objek contoh: add a cat">
+
+<button onclick="addObject()">Add Object</button>
+
+<div class="result">
+<img id="output">
+</div>
+
+</div>
+
+<script src="script.js"></script>
 
 </body>
 </html>
